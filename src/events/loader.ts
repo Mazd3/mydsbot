@@ -32,11 +32,11 @@ export default async (client: Bot) => {
       }
 
       if (once) {
-        client.once(eventName, (...args) => {
+        client.once(eventName!, (...args) => {
           execute(...args, client)
         })
       } else {
-        client.on(eventName, (...args) => {
+        client.on(eventName!, (...args) => {
           execute(...args, client)
         })
       }

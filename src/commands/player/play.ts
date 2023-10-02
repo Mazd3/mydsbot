@@ -6,10 +6,10 @@ import {
   GuildVoiceChannelResolvable,
   SlashCommandBuilder,
 } from 'discord.js'
-import { SlashCommand } from '@/types/SlashCommand'
-import { inVoiceChannel } from '@/utils/validation/voiceChannelValidator'
+import { SlashCommand } from '../../types/SlashCommand'
+import { inVoiceChannel } from '../../utils/validation/voiceChannelValidator'
 import { SearchQueryType, useMainPlayer } from 'discord-player'
-import { GuildQueueMeta } from '@/types/GuildQueueMeta'
+import { GuildQueueMeta } from '../../types/GuildQueueMeta'
 
 export default {
   data: new SlashCommandBuilder() //
@@ -69,10 +69,10 @@ export default {
       })
 
       const resEmbed = new EmbedBuilder().setColor(0x0099ff).setAuthor({
-        name: `“${searchResult.tracks[0].author} - ${searchResult.tracks[0].title}” added to queue!`,
-        iconURL: searchResult.tracks[0].thumbnail,
-        url: searchResult.tracks[0].url,
-      })
+        name: `“${searchResult.tracks[0]?.author} - ${searchResult.tracks[0]?.title}” added to queue!`,
+        iconURL: searchResult.tracks[0]!.thumbnail,
+        url: searchResult.tracks[0]!.url,
+      })!
 
       await interaction.followUp({ embeds: [resEmbed] })
     } catch (error) {
@@ -91,4 +91,5 @@ async function search(interaction: ChatInputCommandInteraction | AutocompleteInt
   if (!source && query) {
     return player.search(query)
   }
+  return null
 }

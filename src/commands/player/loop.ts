@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
 import { QueueRepeatMode, useQueue } from 'discord-player'
-import { SlashCommand } from '@/types/SlashCommand'
+import { SlashCommand } from '../../types/SlashCommand'
 
 export default {
   data: new SlashCommandBuilder() //

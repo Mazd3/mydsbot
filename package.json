@@ -2,14 +2,17 @@
   "name": "mydsbot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx nodemon",
     "build": "npx tsc",
-    "start": "node build/index",
+    "start": "node build/index.js",
     "lint": "npx eslint src",
     "format": "npx eslint src --fix"
+  },
+  "_moduleAliases": {
+    "@": "build"
   },
   "keywords": [],
   "author": "",
@@ -22,11 +25,10 @@
     "nodemon": "^3.0.1",
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
-    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "discord-player": "^6.6.3",
+    "discord-player": "^6.6.4",
     "discord.js": "^14.13.0",
     "ffmpeg-static": "^5.2.0",
     "mediaplex": "^0.0.6",

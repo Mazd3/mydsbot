@@ -1,5 +1,5 @@
-import { SlashCommand } from '@/types/SlashCommand'
-import { inVoiceChannel, sameVoiceChannel } from '@/utils/validation/voiceChannelValidator'
+import { SlashCommand } from '../../types/SlashCommand'
+import { inVoiceChannel, sameVoiceChannel } from '../../utils/validation/voiceChannelValidator'
 import { usePlayer, useQueue } from 'discord-player'
 import {
   ApplicationCommandOptionChoiceData,
@@ -48,7 +48,7 @@ export default {
           embeds: [
             new EmbedBuilder().setColor(0x0099ff).setAuthor({
               name: `“${playerNode.queue.currentTrack?.author} - ${playerNode.queue.currentTrack?.title}” skipped!`,
-              iconURL: playerNode.queue.currentTrack?.thumbnail,
+              iconURL: playerNode.queue.currentTrack!.thumbnail,
             }),
           ],
           ephemeral: true,

@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { usePlayer } from 'discord-player'
-import { SlashCommand } from '@/types/SlashCommand'
-import { inVoiceChannel, sameVoiceChannel } from '@/utils/validation/voiceChannelValidator'
+import { SlashCommand } from '../../types/SlashCommand'
+import { inVoiceChannel, sameVoiceChannel } from '../../utils/validation/voiceChannelValidator'
 
 export default {
   data: new SlashCommandBuilder() //
@@ -17,12 +17,12 @@ export default {
       sameVoiceChannel(interaction)
 
       const playerNode = usePlayer(interaction.guild!.id)
+      const currentTrack = playerNode?.queue.currentTrack
 
-      if (!playerNode?.queue) {
+      if (!currentTrack) {
         return void interaction.followUp('No music is being played!')
       }
 
-      const currentTrack = playerNode.queue.currentTrack
       //
       playerNode.skip()
 
@@ -30,7 +30,7 @@ export default {
         embeds: [
           new EmbedBuilder().setColor(0x0099ff).setAuthor({
             name: `“${currentTrack?.author} - ${currentTrack?.title}” skipped!`,
-            iconURL: currentTrack?.thumbnail,
+            iconURL: currentTrack!.thumbnail!,
           }),
         ],
         ephemeral: true,
