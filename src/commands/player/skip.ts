@@ -1,6 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
-import { SlashCommand } from '../../types/SlashCommand'
-import PlayerHandler from '../../handlers/playerHandler'
+import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
+import { usePlayer } from 'discord-player'
+import { SlashCommand } from '@/types/SlashCommand'
+import { inVoiceChannel, sameVoiceChannel } from '@/utils/validation/voiceChannelValidator'
 
 export default {
   data: new SlashCommandBuilder() //
@@ -8,6 +9,34 @@ export default {
     .setDescription('Skip current track'),
 
   run: async (interaction: ChatInputCommandInteraction) => {
-    await PlayerHandler.skip(interaction)
+    //
+    await interaction.deferReply({ ephemeral: true })
+
+    try {
+      inVoiceChannel(interaction)
+      sameVoiceChannel(interaction)
+
+      const playerNode = usePlayer(interaction.guild!.id)
+
+      if (!playerNode?.queue) {
+        return void interaction.followUp('No music is being played!')
+      }
+
+      const currentTrack = playerNode.queue.currentTrack
+      //
+      playerNode.skip()
+
+      interaction.followUp({
+        embeds: [
+          new EmbedBuilder().setColor(0x0099ff).setAuthor({
+            name: `“${currentTrack?.author} - ${currentTrack?.title}” skipped!`,
+            iconURL: currentTrack?.thumbnail,
+          }),
+        ],
+        ephemeral: true,
+      })
+    } catch (error) {
+      console.log(error)
+    }
   },
 } as SlashCommand
