@@ -9,11 +9,11 @@
     "build": "npx tsc",
     "start": "node build/index.js",
     "lint": "npx eslint src",
-    "format": "npx eslint src --fix"
+    "format": "npx eslint src --fix",
+    "docker:build": "docker build --tag msb .",
+    "docker:start": "docker run -it --rm -p 8090:8090 msb"
   },
-  "_moduleAliases": {
-    "@": "build"
-  },
+
   "keywords": [],
   "author": "",
   "license": "ISC",
