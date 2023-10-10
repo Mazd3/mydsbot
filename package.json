@@ -11,9 +11,8 @@
     "lint": "npx eslint src",
     "format": "npx eslint src --fix",
     "docker:build": "docker build --tag msb .",
-    "docker:start": "docker run -it --rm -p 8090:8090 msb"
+    "docker:start": "docker run -it --rm -p 8070:8070 msb"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -30,8 +29,10 @@
   "dependencies": {
     "discord-player": "^6.6.4",
     "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
     "mediaplex": "^0.0.6",
+    "mongoose": "^7.5.3",
     "youtube-ext": "^1.1.10"
   }
 }

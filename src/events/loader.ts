@@ -1,4 +1,4 @@
-import Bot from '../structs/Bot'
+import Bot from '../structures/Bot'
 import { join } from 'path'
 import { PlayerEvents, useMainPlayer } from 'discord-player'
 import { readdirSync } from 'fs'

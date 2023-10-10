@@ -1,5 +1,5 @@
 import { Interaction } from 'discord.js'
-import Bot from '../../structs/Bot'
+import Bot from '../../structures/Bot'
 
 export default async (interaction: Interaction, client: Bot) => {
   if (interaction.isAutocomplete()) {
