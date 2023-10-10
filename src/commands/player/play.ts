@@ -72,12 +72,26 @@ export default {
       await queue.node.play()
     }
 
-    const playEmbed = new EmbedBuilder().setColor(0x0099ff).setAuthor({
-      name: `“${searchResult.tracks[0]?.author} - ${searchResult.tracks[0]?.title}” added to queue!`,
-      iconURL: searchResult.tracks[0]!.thumbnail,
-      url: searchResult.tracks[0]!.url,
-    })
-
-    interaction.editReply({ embeds: [playEmbed] })
+    if (searchResult.hasPlaylist()) {
+      return void interaction.editReply({
+        embeds: [
+          new EmbedBuilder().setColor(0x0099ff).setAuthor({
+            name: `Playlist “${searchResult.playlist!.title}” added to queue!`,
+            iconURL: searchResult.playlist!.thumbnail,
+            url: searchResult.playlist!.url,
+          }),
+        ],
+      })
+    } else {
+      return void interaction.editReply({
+        embeds: [
+          new EmbedBuilder().setColor(0x0099ff).setAuthor({
+            name: `Track “${searchResult.tracks[0]?.author} - ${searchResult.tracks[0]?.title}” added to queue!`,
+            iconURL: searchResult.tracks[0]!.thumbnail,
+            url: searchResult.tracks[0]!.url,
+          }),
+        ],
+      })
+    }
   },
 } as SlashCommand
