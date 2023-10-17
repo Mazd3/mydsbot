@@ -34,7 +34,6 @@ export class PlaylistService {
       }),
       prisma.tracksOnPlaylists.deleteMany({
         where: { playlistId, trackId },
-        к,
       }),
     ])
   }
