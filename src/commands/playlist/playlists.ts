@@ -1,6 +1,6 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js'
+import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../../types/SlashCommand'
-import { Playlist } from '../../models/Playlist'
+import { PlaylistService } from '../../services/playlistService'
 
 export default {
   data: new SlashCommandBuilder() //
@@ -8,16 +8,16 @@ export default {
     .setDescription('View playlists'),
 
   run: async (interaction: ChatInputCommandInteraction) => {
-    //
-    const res: string[] = []
+    await interaction.deferReply({ ephemeral: true })
 
-    await Playlist.find().then((playlists) => {
-      playlists.forEach((playlist) => {
-        console.log(playlist)
-        res.push(playlist.title as string)
-      })
+    const res1 = await PlaylistService.getTracks('clnoj74f00000aa80hg4mzgpz')
+    const res2 = await PlaylistService.getTracks('clnoj79gh0001aa80qhliyjel')
+
+    console.log(res1)
+    console.log(res2)
+
+    await interaction.editReply({
+      embeds: [new EmbedBuilder().setAuthor({ name: 'Playlists' }).setDescription('dd')],
     })
-
-    interaction.reply(res.join(' '))
   },
 } as SlashCommand

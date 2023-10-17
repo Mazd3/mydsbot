@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Playlist {
+  id      String              @id @unique @default(cuid())
+  author  String
+  title   String
+  tracks  TracksOnPlaylists[]
+  guild   Guild?              @relation(fields: [guildId], references: [id])
+  guildId String?
+}
+
+model Track {
+  id        String              @id @unique
+  url       String
+  author    String
+  title     String
+  thumbnail String
+  playlists TracksOnPlaylists[]
+}
+
+model TracksOnPlaylists {
+  id         String   @id @unique @default(cuid())
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  playlistId String
+  track      Track    @relation(fields: [trackId], references: [id])
+  trackId    String
+  assignedAt DateTime @default(now())
+  assignedBy String
+
+  @@unique([playlistId, trackId])
+}
+
+model Guild {
+  id                     String     @unique
+  playlists              Playlist[]
+  guildNodeCreateOptions Json?
+}

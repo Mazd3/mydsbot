@@ -1,81 +1,56 @@
 import { AutocompleteInteraction, ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
-import { useMainPlayer } from 'discord-player'
 import { SlashCommand } from '../../types/SlashCommand'
-import { Playlist } from '../../models/Playlist'
-import { ITrack } from 'models/Track'
+import { PlaylistService } from '../../services/playlistService'
+
+// import { ITrack } from 'models/Track'
 
 export default {
   data: new SlashCommandBuilder() //
     .setName('playlist_remove')
     .setDescription('Remove track from playlist')
-    .addStringOption((option) => option.setName('playlist').setDescription('Playlist name').setRequired(true).setAutocomplete(true))
-    .addStringOption((option) => option.setName('track').setDescription('Track URL or Name').setRequired(true).setAutocomplete(true)),
+    .addStringOption((option) =>
+      option.setName('playlist').setDescription('Playlist name').setRequired(true).setAutocomplete(true),
+    )
+    .addStringOption((option) =>
+      option.setName('track').setDescription('Track URL or Name').setRequired(true).setAutocomplete(true),
+    ),
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     //
     const focusedValue = interaction.options.getFocused(true)
     const returnData: { name: string; value: string }[] = []
-
     /* autocomplete playlist search
-    search playlists in db */
+      search playlists in db */
     if (focusedValue.name === 'playlist') {
+      const result = await PlaylistService.getByGuildId(interaction.guildId!)
       if (focusedValue.value) {
-        const result = await Playlist.find({
-          author: interaction.user.id,
-          guild: interaction.guildId,
-          title: { $regex: focusedValue.value, $options: 'i' },
-        })
-        result.map((playlist) => {
-          returnData.push({ name: playlist.title as string, value: playlist.title as string })
+        const filteredResult = result.filter((playlist) => playlist.title.includes(focusedValue.value.toLowerCase()))
+        filteredResult.slice(0, 8).map((playlist) => {
+          returnData.push({ name: playlist.title, value: playlist.id })
         })
       } else {
-        const result = await Playlist.find({
-          author: interaction.user.id,
-          guild: interaction.guildId,
-        })
-        result.map((playlist) => {
-          returnData.push({ name: playlist.title as string, value: playlist.title as string })
+        result.slice(0, 8).map((playlist) => {
+          returnData.push({ name: playlist.title, value: playlist.id })
         })
       }
     }
-
     /* autocomplete track search
-    search track with player.search() */
+      search track in db */
     if (focusedValue.name === 'track') {
-      if (focusedValue.value) {
-        const playlist = interaction.options.getString('playlist')
-        const result = await Playlist.findOne(
-          {
-            author: interaction.user.id,
-            guild: interaction.guildId,
-            title: playlist,
-          },
-          { tracks: 1 },
-        )
-        if (result?.tracks) {
-          result.tracks
-            .filter((track) => {
-              return (track.author + ' ' + track.title).toLowerCase().includes(focusedValue.value)
-            })
-            .map((track) => {
-              returnData.push({ name: `${track.author} - ${track.title}`, value: track._id })
-            })
-        }
+      const playlist = interaction.options.getString('playlist')
+      if (!playlist) return
+      const result = await PlaylistService.getTracks(playlist)
+      if (result && focusedValue.value) {
+        const filteredResult = result.filter((track) => {
+          return `${track.author} - ${track.title}`.toLowerCase().includes(focusedValue.value.toLowerCase())
+        })
+        filteredResult.slice(0, 8).map((track) => {
+          returnData.push({ name: `${track.author} - ${track.title}`, value: track.id })
+        })
       } else {
-        const playlist = interaction.options.getString('playlist')
-        const result = await Playlist.findOne(
-          {
-            author: interaction.user.id,
-            guild: interaction.guildId,
-            title: playlist,
-          },
-          { tracks: 1 },
-        )
-        if (result?.tracks) {
-          result.tracks.map((track) => {
-            returnData.push({ name: `${track.author} - ${track.title}`, value: track._id })
-          })
-        }
+        result.slice(0, 8).map((track) => {
+          returnData.push({ name: `${track.author} - ${track.title}`, value: track.id })
+        })
       }
     }
     await interaction.respond(returnData)
@@ -83,49 +58,20 @@ export default {
 
   run: async (interaction: ChatInputCommandInteraction) => {
     //
+
     await interaction.deferReply({ ephemeral: true })
+    const playlist = interaction.options.getString('playlist')!
+    const track = interaction.options.getString('track')!
 
-    const player = useMainPlayer()!
-    const playlistOption = interaction.options.getString('playlist')!
-    const trackOption = interaction.options.getString('track')!
-    const track = (await player.search(trackOption)).tracks[0]!
+    const result = await PlaylistService.remove(playlist, track)!
+    console.log(result)
 
-    const trackDTO: ITrack = {
-      _id: track.id,
-      title: track.title,
-      author: track.author,
-      url: track.url,
-      duration: track.duration,
-      thumbnail: track.thumbnail,
-    }
-
-    /* find playlist in db */
-
-    Playlist.findOneAndUpdate({ title: playlistOption }, { $push: { tracks: trackDTO } })
-      .then(async (res) => {
-        //
-        if (!res) {
-          await interaction.editReply({
-            embeds: [new EmbedBuilder().setAuthor({ name: 'There is no playlist with that name' })],
-          })
-        } else {
-          await interaction.editReply({
-            embeds: [
-              new EmbedBuilder().setAuthor({
-                name: `“${track.author} - ${track.title}” added to “${playlistOption}”`,
-                iconURL: track.thumbnail,
-                url: track.url,
-              }),
-            ],
-          })
-        }
-      })
-      .catch(async (error) => {
-        if (error instanceof Error) {
-          await interaction.editReply({
-            embeds: [new EmbedBuilder().setAuthor({ name: 'Something went wrong :(' })],
-          })
-        }
-      })
+    await interaction.editReply({
+      embeds: [
+        new EmbedBuilder().setAuthor({
+          name: `track “${result[0]?.track.author} - ${result[0]?.track.title}” was removed!`,
+        }),
+      ],
+    })
   },
 } as SlashCommand

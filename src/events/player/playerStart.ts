@@ -14,6 +14,7 @@ export default async (queue: GuildQueue<GuildQueueMeta>, track: Track) => {
         name: `duration: ${track.duration}`,
         value: `requested by: <@${metadata.interaction.user.id}>`,
       })
+      .setFooter({ text: track.playlist ? `playlist: ${track.playlist.title}` : 'asd' })
     queue.metadata.nowPlayingMessage = await metadata.interaction.channel!.send({ embeds: [embed] })
   } catch (error) {}
 }

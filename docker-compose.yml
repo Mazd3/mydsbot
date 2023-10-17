@@ -1,35 +1,40 @@
 version: '3.9'
 
 services:
-  mongodb:
-    container_name: mongodb
-    image: mongo:latest
-    restart: unless-stopped
+  postgres:
+    container_name: postgres
+    image: postgres:alpine
     env_file: ./.env
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USER
-      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+      - POSTGRES_USER=$POSTGRES_USER
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
     ports:
-      - $MONGODB_LOCAL_PORT:$MONGODB_DOCKER_PORT
-    volumes:
-      - mongo-data:/mongo/data
-  app:
-    container_name: bot
-    depends_on:
-      - mongodb
-    build: ./
-    restart: unless-stopped
-    env_file: ./.env
-    ports:
-      - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
-    environment:
-      - DB_HOST=mongodb
-      - DB_USER=$MONGODB_USER
-      - DB_PASSWORD=$MONGODB_PASSWORD
-      - DB_NAME=$MONGODB_DATABASE
-      - DB_PORT=$MONGODB_DOCKER_PORT
-    stdin_open: true
-    tty: true
+      - 5432:5432
 
-volumes:
-  mongo-data:
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    env_file: ./.env
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=mzd@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=$POSTGRES_PASSWORD
+    ports:
+      - 5050:80
+
+  # app:
+  #   container_name: bot
+  #   depends_on:
+  #     - mongodb
+  #   build: ./
+  #   restart: unless-stopped
+  #   env_file: ./.env
+  #   ports:
+  #     - $NODE_LOCAL_PORT:$NODE_DOCKER_PORT
+  #   environment:
+  #     - DB_HOST=mongodb
+  #     - DB_USER=$MONGODB_USER
+  #     - DB_PASSWORD=$MONGODB_PASSWORD
+  #     - DB_NAME=$MONGODB_DATABASE
+  #     - DB_PORT=$MONGODB_DOCKER_PORT
+  #   stdin_open: true
+  #   tty: true

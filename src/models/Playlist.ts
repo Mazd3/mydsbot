@@ -1,7 +1,7 @@
-import { Schema, model } from 'mongoose'
-import { ITrack, TrackSchema } from './Track'
+import { Schema, model, Document } from 'mongoose'
+import { ITrack } from './Track'
 
-interface IPlaylist {
+export interface IPlaylist extends Document {
   title: string
   author: string
   guild: string
@@ -10,15 +10,13 @@ interface IPlaylist {
   thumbnail: string
 }
 
-const PlaylistSchema = new Schema<IPlaylist>({
+const PlaylistSchema: Schema = new Schema<IPlaylist>({
   title: String,
   author: String,
   guild: String,
-  tracks: [TrackSchema],
+  tracks: [{ type: Schema.Types.ObjectId, ref: 'Track' }],
   description: String,
   thumbnail: { type: String, default: null },
 })
 
-const Playlist = model('Playlist', PlaylistSchema)
-
-export { IPlaylist, Playlist, TrackSchema }
+export const Playlist = model<IPlaylist>('Playlist', PlaylistSchema)

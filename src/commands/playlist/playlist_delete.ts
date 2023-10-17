@@ -1,6 +1,6 @@
 import { AutocompleteInteraction, ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../../types/SlashCommand'
-import { Playlist } from '../../models/Playlist'
+import { PlaylistService } from '../../services/playlistService'
 
 export default {
   //
@@ -8,59 +8,40 @@ export default {
     .setName('playlist_delete')
     .setDescription('Delete selected playlist')
     .addStringOption((option) =>
-      option.setName('title').setDescription('Playlist title').setRequired(true).setAutocomplete(true),
+      option.setName('playlist').setDescription('Playlist title').setRequired(true).setAutocomplete(true),
     ),
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
     //
-    const title = interaction.options.getString('title')
+    const title = interaction.options.getString('playlist')
     const returnData: { name: string; value: string }[] = []
 
     /* autocomplete playlist search
         search playlists in db */
 
+    const result = await PlaylistService.getByGuildId(interaction.guildId!)
     if (title) {
-      const result = await Playlist.find({
-        author: interaction.user.id,
-        guild: interaction.guildId,
-        title: { $regex: title, $options: 'i' },
-      })
-      result.map((playlist) => {
-        returnData.push({
-          name: `${playlist.title} - ${playlist.description}` as string,
-          value: playlist.title as string,
-        })
+      const filteredResult = result.filter((playlist) => playlist.title.includes(title.toLowerCase()))
+      filteredResult.map((playlist) => {
+        returnData.push({ name: playlist.title, value: playlist.id })
       })
     } else {
-      const result = await Playlist.find({
-        author: interaction.user.id,
-        guild: interaction.guildId,
-      })
       result.map((playlist) => {
-        returnData.push({
-          name: `${playlist.title} - ${playlist.description}` as string,
-          value: playlist.title as string,
-        })
+        returnData.push({ name: playlist.title, value: playlist.id })
       })
     }
 
     await interaction.respond(returnData)
   },
-
   run: async (interaction: ChatInputCommandInteraction) => {
-    //
     await interaction.deferReply({ ephemeral: true })
+    const playlist = interaction.options.getString('playlist')!
+    console.log(playlist)
+    const result = await PlaylistService.delete(playlist)
+    console.log(result)
 
-    const title = interaction.options.getString('title')
-    const playlist = await Playlist.findOneAndDelete({ title: title })
-
-    if (!playlist)
-      return void interaction.editReply({
-        embeds: [new EmbedBuilder().setAuthor({ name: 'Playlist not found' })],
-      })
-
-    return void interaction.editReply({
-      embeds: [new EmbedBuilder().setAuthor({ name: `Playlist “${title}” deleted!` })],
+    await interaction.editReply({
+      embeds: [new EmbedBuilder().setAuthor({ name: `Playlist “${result[1].title}” deleted!` })],
     })
   },
 } as SlashCommand

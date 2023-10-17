@@ -1,6 +1,7 @@
 import {
   AutocompleteInteraction,
   ChatInputCommandInteraction,
+  EmbedAuthorOptions,
   EmbedBuilder,
   GuildMember,
   GuildVoiceChannelResolvable,
@@ -28,12 +29,13 @@ export default {
       const result = await player.search(query)
       if (result.playlist) {
         returnData.push({ name: result!.playlist.title.substring(0, 90) + ' | Playlist', value: result.playlist.url })
+      } else {
+        result!.tracks
+          .slice(0, 8)
+          .map((track) =>
+            returnData.push({ name: `${track.author} - ${track.title}`.substring(0, 90), value: track.url }),
+          )
       }
-      result!.tracks
-        .slice(0, 8)
-        .map((track) =>
-          returnData.push({ name: `${track.author} - ${track.title}`.substring(0, 90), value: track.url }),
-        )
     }
     await interaction.respond(returnData)
   },
@@ -72,26 +74,26 @@ export default {
       await queue.node.play()
     }
 
+    let embedData: EmbedAuthorOptions
+
+    // check if search result is a playlist
+    // and create correct embed data
     if (searchResult.hasPlaylist()) {
-      return void interaction.editReply({
-        embeds: [
-          new EmbedBuilder().setColor(0x0099ff).setAuthor({
-            name: `Playlist “${searchResult.playlist!.title}” added to queue!`,
-            iconURL: searchResult.playlist!.thumbnail,
-            url: searchResult.playlist!.url,
-          }),
-        ],
-      })
+      embedData = {
+        name: `Playlist “${searchResult.playlist!.title}” added to queue!`,
+        iconURL: searchResult.playlist!.thumbnail,
+        url: searchResult.playlist!.url,
+      }
     } else {
-      return void interaction.editReply({
-        embeds: [
-          new EmbedBuilder().setColor(0x0099ff).setAuthor({
-            name: `Track “${searchResult.tracks[0]?.author} - ${searchResult.tracks[0]?.title}” added to queue!`,
-            iconURL: searchResult.tracks[0]!.thumbnail,
-            url: searchResult.tracks[0]!.url,
-          }),
-        ],
-      })
+      embedData = {
+        name: `Track “${searchResult.tracks[0]?.author} - ${searchResult.tracks[0]?.title}” added to queue!`,
+        iconURL: searchResult.tracks[0]!.thumbnail,
+        url: searchResult.tracks[0]!.url,
+      }
     }
+
+    const playEmbed = new EmbedBuilder().setColor(0x0099ff).setAuthor({ ...embedData })
+
+    return void interaction.editReply({ embeds: [playEmbed] })
   },
 } as SlashCommand

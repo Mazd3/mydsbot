@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder, SlashCommandBuilder } from 'discord.js'
 import { SlashCommand } from '../../types/SlashCommand'
-import { Playlist } from '../../models/Playlist'
+import { PlaylistService } from '../../services/playlistService'
 
 export default {
   data: new SlashCommandBuilder() //
@@ -10,27 +10,16 @@ export default {
     .addStringOption((option) => option.setName('description').setDescription('Enter playlist description')),
 
   run: async (interaction: ChatInputCommandInteraction) => {
-    //
     await interaction.deferReply({ ephemeral: true })
 
-    const title = interaction.options.getString('title')
-    const description = interaction.options.getString('description')
+    const title = interaction.options.getString('title')!
+    const author = interaction.user.id!
+    const guild = interaction.guildId!
 
-    Playlist.create({
-      title: title,
-      author: interaction.user.id,
-      guild: interaction.guildId,
-      tracks: [],
-      description: description,
-      thumbnail: null,
+    const res = await PlaylistService.create({ title, author, guild })
+
+    await interaction.editReply({
+      embeds: [new EmbedBuilder().setAuthor({ name: `Playlist “${res.title}” created!` })],
     })
-      .then((playlist) => {
-        console.log(playlist)
-        interaction.editReply({ embeds: [new EmbedBuilder().setAuthor({ name: `Playlist “${title}” created!` })] })
-      })
-      .catch((err) => {
-        console.log(err)
-        interaction.editReply({ embeds: [new EmbedBuilder().setAuthor({ name: 'Something went wrong!' })] })
-      })
   },
 } as SlashCommand

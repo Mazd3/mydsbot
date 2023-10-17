@@ -7,9 +7,8 @@ import {
   SlashCommandBuilder,
 } from 'discord.js'
 import { SlashCommand } from '../../types/SlashCommand'
-import { Playlist } from '../../models/Playlist'
+import { PlaylistService } from '../../services/playlistService'
 import { Track, useMainPlayer, useQueue } from 'discord-player'
-import { ITrack } from 'models/Track'
 import { GuildQueueMeta } from 'types/GuildQueueMeta'
 
 export default {
@@ -18,7 +17,7 @@ export default {
     .setName('playlist_play')
     .setDescription('Play selected playlist')
     .addStringOption((option) =>
-      option.setName('title').setDescription('Playlist title').setRequired(true).setAutocomplete(true),
+      option.setName('playlist').setDescription('pick playlist').setRequired(true).setAutocomplete(true),
     ),
 
   autocomplete: async (interaction: AutocompleteInteraction) => {
@@ -29,28 +28,15 @@ export default {
     /* autocomplete playlist search
       search playlists in db */
 
+    const result = await PlaylistService.getByGuildId(interaction.guildId!)
     if (title) {
-      const result = await Playlist.find({
-        author: interaction.user.id,
-        guild: interaction.guildId,
-        title: { $regex: title, $options: 'i' },
-      })
-      result.map((playlist) => {
-        returnData.push({
-          name: `${playlist.title} - ${playlist.description}` as string,
-          value: playlist.title as string,
-        })
+      const filteredResult = result.filter((playlist) => playlist.title.includes(title.toLowerCase()))
+      filteredResult.map((playlist) => {
+        returnData.push({ name: playlist.title, value: playlist.id })
       })
     } else {
-      const result = await Playlist.find({
-        author: interaction.user.id,
-        guild: interaction.guildId,
-      })
       result.map((playlist) => {
-        returnData.push({
-          name: `${playlist.title} - ${playlist.description}` as string,
-          value: playlist.title as string,
-        })
+        returnData.push({ name: playlist.title, value: playlist.id })
       })
     }
 
@@ -58,32 +44,20 @@ export default {
   },
 
   run: async (interaction: ChatInputCommandInteraction) => {
-    //
     await interaction.deferReply({ ephemeral: true })
+    const playlist = interaction.options.getString('playlist')!
+    const result = await PlaylistService.getTracks(playlist)
 
-    const title = interaction.options.getString('title')
-    const playlist = await Playlist.findOne({ title: title }, { tracks: 1 })
     const member = interaction.member as GuildMember
     const player = useMainPlayer()!
     const channel = member.voice.channel as GuildVoiceChannelResolvable
 
-    if (!playlist)
-      return void interaction.editReply({
-        embeds: [new EmbedBuilder().setAuthor({ name: 'Playlist not found' })],
-      })
-
-    if (!playlist?.tracks.length)
-      return void interaction.editReply({
-        embeds: [new EmbedBuilder().setAuthor({ name: 'Playlist is empty' })],
-      })
-
-    const tracks: Track<ITrack>[] = []
-    await playlist.tracks.forEach(async (track) => {
-      tracks.push(new Track<ITrack>(player, track))
+    const tracks: Track[] = []
+    result.forEach(async (track) => {
+      tracks.push(new Track<Track>(player, track))
     })
 
     let queue = useQueue(channel)
-
     if (!queue) {
       queue = player.nodes.create(channel, {
         metadata: { interaction } as GuildQueueMeta,
@@ -98,15 +72,12 @@ export default {
       })
       await queue.connect(channel)
     }
-
     queue.addTrack(tracks)
-
     if (!queue.isPlaying()) {
       await queue.node.play()
     }
-
     return void interaction.editReply({
-      embeds: [new EmbedBuilder().setAuthor({ name: `Playlist “${title}” selected!` })],
+      embeds: [new EmbedBuilder().setAuthor({ name: `Playlist “some” selected!` })],
     })
   },
 } as SlashCommand
